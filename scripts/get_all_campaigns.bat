@@ -1,0 +1,1 @@
+curl --include http://localhost:8080/campaigns
