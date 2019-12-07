@@ -7,6 +7,13 @@ import java.util.Objects;
 
 @Entity
 @Table(name = "campaigns")
+@NamedQueries(
+        {
+                @NamedQuery(
+                        name = "com.bendeguz.biddingapp.core.Campaign.findAll",
+                        query = "SELECT c FROM Campaign c"
+                )
+        })
 public class Campaign {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
