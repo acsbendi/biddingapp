@@ -8,6 +8,8 @@ import io.dropwizard.hibernate.UnitOfWork;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.net.URI;
 
 @Path("/campaigns")
 @Produces(MediaType.APPLICATION_JSON)
@@ -21,8 +23,11 @@ public class CampaignsResource {
     @POST
     @UnitOfWork
     @Consumes(MediaType.APPLICATION_JSON)
-    public Campaign createCampaign(@NotNull CampaignParam campaignParam) {
+    public Response createCampaign(@NotNull CampaignParam campaignParam) {
         Campaign campaign = new Campaign(campaignParam.getName(), campaignParam.getKeywords(), campaignParam.getBudget());
-        return this.campaignDAO.create(campaign);
+        Campaign createdCampaign = this.campaignDAO.create(campaign);
+
+        URI createdUri = URI.create("/campaigns/" + createdCampaign.getId());
+        return Response.created(createdUri).build();
     }
 }
