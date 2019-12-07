@@ -39,7 +39,6 @@ public class Campaign {
         return keywords;
     }
 
-
     @JsonProperty
     public double getBudget(){
         return budget;

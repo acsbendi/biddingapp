@@ -38,6 +38,6 @@ public class CampaignParam {
 
     @Override
     public String toString() {
-        return "Campaign{" + "name=" + name + ", keywords=" + Arrays.toString(keywords) + ", budget=" + budget + '}';
+        return "CampaignParam{" + "name=" + name + ", keywords=" + Arrays.toString(keywords) + ", budget=" + budget + '}';
     }
 }
