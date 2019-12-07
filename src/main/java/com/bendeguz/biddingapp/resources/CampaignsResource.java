@@ -5,6 +5,7 @@ import com.bendeguz.biddingapp.core.Campaign;
 import com.bendeguz.biddingapp.db.CampaignDAO;
 import io.dropwizard.hibernate.UnitOfWork;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -24,7 +25,7 @@ public class CampaignsResource {
     @POST
     @UnitOfWork
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response createCampaign(@NotNull CampaignParam campaignParam) {
+    public Response createCampaign(@NotNull @Valid CampaignParam campaignParam) {
         Campaign campaign = new Campaign(campaignParam.getName(), campaignParam.getKeywords(), campaignParam.getBudget());
         Campaign createdCampaign = campaignDAO.create(campaign);
 
