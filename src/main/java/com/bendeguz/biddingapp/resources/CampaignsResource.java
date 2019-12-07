@@ -25,9 +25,16 @@ public class CampaignsResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response createCampaign(@NotNull CampaignParam campaignParam) {
         Campaign campaign = new Campaign(campaignParam.getName(), campaignParam.getKeywords(), campaignParam.getBudget());
-        Campaign createdCampaign = this.campaignDAO.create(campaign);
+        Campaign createdCampaign = campaignDAO.create(campaign);
 
         URI createdUri = URI.create("/campaigns/" + createdCampaign.getId());
         return Response.created(createdUri).build();
+    }
+
+    @GET
+    @Path("/{campaignId}")
+    @UnitOfWork
+    public Campaign getCampaignById(@NotNull @PathParam("campaignId") long campaignId) {
+        return campaignDAO.findById(campaignId).orElseThrow(() -> new NotFoundException("No such campaign."));
     }
 }
