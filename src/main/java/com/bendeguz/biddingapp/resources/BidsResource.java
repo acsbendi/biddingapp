@@ -34,7 +34,7 @@ public class BidsResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response createBid(@NotNull @Valid BidParam bidParam) {
         if(tryToBid(bidParam.getKeywords())){
-            BidResult result = new BidResult(bidParam.getId(), BID_AMOUNT);
+            BidResult result = new BidResult(bidParam.getBidId(), BID_AMOUNT);
             return Response.ok(result).build();
         } else {
             return Response.noContent().build();

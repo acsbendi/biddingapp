@@ -7,7 +7,7 @@ import java.util.Arrays;
 
 public class BidParam {
     @NotNull
-    private Long id;
+    private Long bidId;
 
     @NotNull
     private String[] keywords;
@@ -16,14 +16,14 @@ public class BidParam {
         // Jackson deserialization
     }
 
-    public BidParam(long id, String[] keywords) {
-        this.id = id;
+    public BidParam(long bidId, String[] keywords) {
+        this.bidId = bidId;
         this.keywords = keywords;
     }
 
     @JsonProperty
-    public long getId() {
-        return id;
+    public long getBidId() {
+        return bidId;
     }
 
     @JsonProperty
@@ -33,6 +33,6 @@ public class BidParam {
 
     @Override
     public String toString() {
-        return "BidParam{" + "id=" + id + ", keywords=" + Arrays.toString(keywords) + '}';
+        return "BidParam{" + "bidId=" + bidId + ", keywords=" + Arrays.toString(keywords) + '}';
     }
 }
