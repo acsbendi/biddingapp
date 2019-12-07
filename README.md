@@ -1,0 +1,2 @@
+## Design decisions
+* There was some ambiguity regarding the type of the `"bidId"` JSON field in the specification: in the **Resources** section, it was shown as a number (`1`), but in the **Request/response examples** section, it's used as a string (`"1"`). I decided to resolve this ambiguity by using a number, because it makes more sense considering that the actual content of the field is always a numerical ID (`1` or `"1"`) in the specification.
