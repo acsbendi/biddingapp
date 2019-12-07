@@ -17,6 +17,9 @@
             <column name="budget" type="double">
                 <constraints nullable="false"/>
             </column>
+            <column name="spending" type="double">
+                <constraints nullable="false"/>
+            </column>
         </createTable>
         <createTable tableName="keywords">
             <column name="campaign_id" type="bigint">

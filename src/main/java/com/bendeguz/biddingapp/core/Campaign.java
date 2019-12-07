@@ -53,6 +53,9 @@ public class Campaign {
     @Column(name = "budget", nullable = false)
     private double budget;
 
+    @Column(name = "spending", nullable = false)
+    private double spending;
+
     public Campaign() {
         // Jackson deserialization
     }
@@ -61,6 +64,7 @@ public class Campaign {
         this.name = name;
         this.keywords.addAll(Arrays.asList(keywords));
         this.budget = budget;
+        this.spending = 0;
     }
 
     public long getId() {
@@ -93,6 +97,14 @@ public class Campaign {
 
     public void setBudget(long budget) {
         this.budget = budget;
+    }
+
+    public double getSpending(){
+        return spending;
+    }
+
+    public void setSpending(long spending) {
+        this.spending = spending;
     }
 
     @Override
