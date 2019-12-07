@@ -14,10 +14,15 @@
             <column name="name" type="varchar(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="keywords" type="array">
+            <column name="budget" type="double">
                 <constraints nullable="false"/>
             </column>
-            <column name="budget" type="double">
+        </createTable>
+        <createTable tableName="keywords">
+            <column name="campaign_id" type="bigint">
+                <constraints nullable="false" references="campaigns" foreignKeyName="id"/>
+            </column>
+            <column name="keyword" type="varchar(255)">
                 <constraints nullable="false"/>
             </column>
         </createTable>
