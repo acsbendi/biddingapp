@@ -43,7 +43,7 @@ public class BidsResource {
 
     private boolean tryToBid(String[] keywords){
         List<Campaign> campaigns = campaignDAO.findCampaignsWithPositiveBalanceByKeywords(keywords);
-        if(campaigns.size() > 0) {
+        if(!campaigns.isEmpty()) {
             Campaign campaign = campaigns.get(random.nextInt(campaigns.size()));
             double currentSpending = campaign.getSpending();
             campaign.setSpending(currentSpending + BID_AMOUNT);
