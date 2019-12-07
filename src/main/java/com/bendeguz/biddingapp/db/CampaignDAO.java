@@ -22,8 +22,19 @@ public class CampaignDAO extends AbstractDAO<Campaign> {
         return persist(campaign);
     }
 
+    public void save(Campaign campaign) {
+        persist(campaign);
+    }
+
     @SuppressWarnings("unchecked")
     public List<Campaign> findAll() {
-        return list((Query<Campaign>) namedQuery("com.bendeguz.biddingapp.core.Campaign.findAll"));
+        return list((Query<Campaign>) namedQuery(Campaign.QUERY_FIND_ALL));
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Campaign> findCampaignsWithPositiveBalanceByKeywords(String[] keywords) {
+        Query query = namedQuery(Campaign.QUERY_FIND_CAMPAIGNS_WITH_POSITIVE_BALANCE_BY_KEYWORDS);
+        query.setParameterList("keywords", keywords);
+        return list(query);
     }
 }

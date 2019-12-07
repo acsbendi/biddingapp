@@ -2,6 +2,7 @@ package com.bendeguz.biddingapp;
 
 import com.bendeguz.biddingapp.core.Campaign;
 import com.bendeguz.biddingapp.db.CampaignDAO;
+import com.bendeguz.biddingapp.resources.BidsResource;
 import io.dropwizard.Application;
 import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.hibernate.HibernateBundle;
@@ -44,8 +45,10 @@ public class BiddingApplication extends Application<BiddingConfiguration> {
                     Environment environment) {
         final CampaignDAO campaignDAO = new CampaignDAO(hibernateBundle.getSessionFactory());
 
-        final CampaignsResource resource = new CampaignsResource(campaignDAO);
-        environment.jersey().register(resource);
+        final CampaignsResource campaignsResource = new CampaignsResource(campaignDAO);
+        final BidsResource bidsResource = new BidsResource(campaignDAO);
+        environment.jersey().register(campaignsResource);
+        environment.jersey().register(bidsResource);
     }
 
 }

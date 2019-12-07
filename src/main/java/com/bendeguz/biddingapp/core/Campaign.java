@@ -12,11 +12,29 @@ import java.util.Set;
 @NamedQueries(
         {
                 @NamedQuery(
-                        name = "com.bendeguz.biddingapp.core.Campaign.findAll",
+                        name = Campaign.QUERY_FIND_ALL,
                         query = "SELECT c FROM Campaign c"
+                ),
+                /**
+                 * Fin
+                 */
+                @NamedQuery(
+                        name = Campaign.QUERY_FIND_CAMPAIGNS_WITH_POSITIVE_BALANCE_BY_KEYWORDS,
+                        query = "SELECT c FROM Campaign AS c JOIN c.keywords AS keyword WHERE keyword IN (:keywords) AND c.budget - c.spending > 0"
                 )
         })
 public class Campaign {
+    public static final String QUERY_FIND_ALL = "com.bendeguz.biddingapp.core.Campaign.findAll";
+
+    /**
+     * Query to find the campaigns that have at least one of the specified keywords, and a positive balance.
+     * The balance of a campaign is defined as the difference between its budget and its spending.
+     *
+     * The implementation of this query is a bit unusual, the campaigns are joined by one of its own fields.
+     * The reason why it has to be done this way is that there's no INTERSECT operator in HQL.
+     */
+    public static final String QUERY_FIND_CAMPAIGNS_WITH_POSITIVE_BALANCE_BY_KEYWORDS = "com.bendeguz.biddingapp.core.Campaign.findCampaignsWithPositiveBalanceByKeywords";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
@@ -103,7 +121,7 @@ public class Campaign {
         return spending;
     }
 
-    public void setSpending(long spending) {
+    public void setSpending(double spending) {
         this.spending = spending;
     }
 
