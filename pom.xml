@@ -7,6 +7,8 @@
     <groupId>com.bendeguz.biddingapp</groupId>
     <artifactId>biddingapp</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <name>Real-Time Bidding Application</name>
+
     <build>
         <plugins>
             <plugin>
