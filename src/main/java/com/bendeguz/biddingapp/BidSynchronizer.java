@@ -36,7 +36,7 @@ public class BidSynchronizer {
 
         boolean isOlderThan10Sec(){
             Duration durationSinceSpending = Duration.between(time, Instant.now());
-            return durationSinceSpending.getSeconds() > 10;
+            return durationSinceSpending.compareTo(Duration.ofSeconds(10)) > 0;
         }
     }
 
