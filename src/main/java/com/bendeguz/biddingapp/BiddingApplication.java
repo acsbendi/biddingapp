@@ -11,6 +11,9 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import com.bendeguz.biddingapp.resources.CampaignsResource;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 public class BiddingApplication extends Application<BiddingConfiguration> {
     public static void main(String[] args) throws Exception {
         new BiddingApplication().run(args);
@@ -23,6 +26,7 @@ public class BiddingApplication extends Application<BiddingConfiguration> {
                     return configuration.getDataSourceFactory();
                 }
             };
+    private ExecutorService executorService = Executors.newCachedThreadPool();
 
     @Override
     public String getName() {
@@ -46,7 +50,7 @@ public class BiddingApplication extends Application<BiddingConfiguration> {
         final CampaignDAO campaignDAO = new CampaignDAO(hibernateBundle.getSessionFactory());
 
         final CampaignsResource campaignsResource = new CampaignsResource(campaignDAO);
-        final BidsResource bidsResource = new BidsResource(campaignDAO);
+        final BidsResource bidsResource = new BidsResource(campaignDAO, executorService, hibernateBundle);
         environment.jersey().register(campaignsResource);
         environment.jersey().register(bidsResource);
     }
