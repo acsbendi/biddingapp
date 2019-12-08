@@ -22,10 +22,6 @@ public class CampaignDAO extends AbstractDAO<Campaign> {
         return persist(campaign);
     }
 
-    public void save(Campaign campaign) {
-        persist(campaign);
-    }
-
     @SuppressWarnings("unchecked")
     public List<Campaign> findAll() {
         return list((Query<Campaign>) namedQuery(Campaign.QUERY_FIND_ALL));
@@ -36,5 +32,19 @@ public class CampaignDAO extends AbstractDAO<Campaign> {
         Query query = namedQuery(Campaign.QUERY_FIND_CAMPAIGNS_WITH_POSITIVE_BALANCE_BY_KEYWORDS);
         query.setParameterList("keywords", keywords);
         return list(query);
+    }
+
+    /**
+     * Tries to increase the spending for a Campaign.
+     *
+     * @param campaign The campaign to increase spending for.
+     * @param amount The amount by which to increase the spending.
+     * @return Success flag, true if the increase is successful, false otherwise.
+     */
+    public boolean tryToIncreaseSpending(Campaign campaign, double amount) {
+        Query query = namedQuery(Campaign.QUERY_INCREASE_SPENDING);
+        query.setParameter("id", campaign.getId());
+        query.setParameter("increase", amount);
+        return query.executeUpdate() > 0;
     }
 }

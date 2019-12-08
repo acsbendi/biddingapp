@@ -15,21 +15,27 @@ import java.util.Set;
                         name = Campaign.QUERY_FIND_ALL,
                         query = "SELECT c FROM Campaign c"
                 ),
-                /**
-                 * Fin
-                 */
                 @NamedQuery(
                         name = Campaign.QUERY_FIND_CAMPAIGNS_WITH_POSITIVE_BALANCE_BY_KEYWORDS,
                         query = "SELECT c FROM Campaign AS c JOIN c.keywords AS keyword WHERE keyword IN (:keywords) AND c.budget - c.spending > 0"
+                ),
+                @NamedQuery(
+                        name = Campaign.QUERY_INCREASE_SPENDING,
+                        query = "UPDATE Campaign SET spending = spending + :increase WHERE id = :id AND budget - spending - :increase >= 0"
                 )
         })
 public class Campaign {
     public static final String QUERY_FIND_ALL = "com.bendeguz.biddingapp.core.Campaign.findAll";
-
+    /**
+     * Query to increase a Campaign's spending by the specified amount. Succeeds only if the campaign's balance
+     * (budget - spending) remains 0 or greater after the spending increase. Returns the number of updates
+     * (i.e. 1 if it succeeds, 0 if it doesn't).
+     */
+    public static final String QUERY_INCREASE_SPENDING = "com.bendeguz.biddingapp.core.Campaign.increaseSpending";
     /**
      * Query to find the campaigns that have at least one of the specified keywords, and a positive balance.
      * The balance of a campaign is defined as the difference between its budget and its spending.
-     *
+     * <p>
      * The implementation of this query is a bit unusual, the campaigns are joined by one of its own fields.
      * The reason why it has to be done this way is that there's no INTERSECT operator in HQL.
      */
@@ -44,20 +50,19 @@ public class Campaign {
     private String name;
 
     /**
-     *  Perhaps it's not the most obvious solution to use a Set but everything else failed to work:
-     *
-     *  - When I tried to map the field to h2's built-in array type, the following exception occurred:
-     *      org.h2.jdbc.JdbcSQLException: Hexadecimal string contains non-hex character
-     *    As I could not find any sources online regarding this mapping, I concluded this is not possible.
-     *
-     *  - When I tried to use Array[] with ElementCollection and CollectionTable, the following exception occurred:
-     *      org.hibernate.AnnotationException: List/array has to be annotated with an @OrderColumn
-     *    As far as I could find out, this means that I should create another column just for the ordering.
-     *    I think this solution would have been more hacky, so I went with using a Set type instead.
-     *
-     *  I also think that it makes sense to use a set, as a duplicate keyword wouldn't add any value anyway.
-     *  This is why I decided to use a Set instead of a List.
-     *
+     * Perhaps it's not the most obvious solution to use a Set but everything else failed to work:
+     * <p>
+     * - When I tried to map the field to h2's built-in array type, the following exception occurred:
+     * org.h2.jdbc.JdbcSQLException: Hexadecimal string contains non-hex character
+     * As I could not find any sources online regarding this mapping, I concluded this is not possible.
+     * <p>
+     * - When I tried to use Array[] with ElementCollection and CollectionTable, the following exception occurred:
+     * org.hibernate.AnnotationException: List/array has to be annotated with an @OrderColumn
+     * As far as I could find out, this means that I should create another column just for the ordering.
+     * I think this solution would have been more hacky, so I went with using a Set type instead.
+     * <p>
+     * I also think that it makes sense to use a set, as a duplicate keyword wouldn't add any value anyway.
+     * This is why I decided to use a Set instead of a List.
      */
     @ElementCollection
     @CollectionTable(
@@ -101,7 +106,7 @@ public class Campaign {
         this.name = name;
     }
 
-    public Set<String> getKeywords(){
+    public Set<String> getKeywords() {
         return keywords;
     }
 
@@ -109,7 +114,7 @@ public class Campaign {
         this.keywords = keywords;
     }
 
-    public double getBudget(){
+    public double getBudget() {
         return budget;
     }
 
@@ -117,7 +122,7 @@ public class Campaign {
         this.budget = budget;
     }
 
-    public double getSpending(){
+    public double getSpending() {
         return spending;
     }
 

@@ -34,35 +34,34 @@ public class BidsResource {
     /**
      * This static nested class is used to decouple the execution of bidding so it can ensured that it will always
      * take less than BID_TIMEOUT_IN_MILLISECONDS.
-     *
+     * <p>
      * It needs to be implemented in a separate class so we can use the @UnitOfWork annotation to access the database
      * without having to worry about session management.
-     *
+     * <p>
      * Also, a static class is needed because its instantiation happens outside of BidsResource
      * (in the UnitOfWorkAwareProxyFactory.created method).
      */
     private static class TryToBidCallable implements Callable<Boolean> {
+        private static final Logger LOGGER = LoggerFactory.getLogger(TryToBidCallable.class);
+
         private final Random random = new Random();
         private final CampaignDAO campaignDAO;
         private final String[] keywords;
         private final BidSynchronizer bidSynchronizer;
 
-        TryToBidCallable(CampaignDAO campaignDAO, String[] keywords, BidSynchronizer bidSynchronizer){
+        TryToBidCallable(CampaignDAO campaignDAO, String[] keywords, BidSynchronizer bidSynchronizer) {
             this.campaignDAO = campaignDAO;
             this.keywords = keywords;
             this.bidSynchronizer = bidSynchronizer;
         }
 
-        private boolean tryToBidOnCampaign(Campaign campaign) throws InterruptedException{
-            try{
+        private boolean tryToBidOnCampaign(Campaign campaign) throws InterruptedException {
+            try {
                 bidSynchronizer.lockCampaign(campaign.getId());
-                if(bidSynchronizer.isCampaignAvailable(campaign.getId())){
-                    double currentSpending = campaign.getSpending();
-                    campaign.setSpending(currentSpending + BID_AMOUNT);
-
+                if (bidSynchronizer.isCampaignAvailable(campaign.getId())) {
                     // Check if thread has been interrupted - proceed only if not.
                     // This helps ensure that the bidding never takes longer than BID_TIMEOUT_IN_MILLISECONDS.
-                    if(Thread.interrupted()){
+                    if (Thread.interrupted()) {
                         throw new InterruptedException();
                     }
 
@@ -70,8 +69,7 @@ public class BidsResource {
                     // Note that the spending might not actually happen (if the save method fails for example due to
                     // an interrupt event), but this is not a serious problem, since the caller will still see it as failure.
                     bidSynchronizer.spendOnCampaign(campaign.getId(), BID_AMOUNT);
-                    campaignDAO.save(campaign);
-                    return true;
+                    return campaignDAO.tryToIncreaseSpending(campaign, BID_AMOUNT);
                 }
             } finally {
                 bidSynchronizer.unlockCampaign(campaign.getId());
@@ -83,10 +81,10 @@ public class BidsResource {
         @UnitOfWork
         public Boolean call() throws Exception {
             List<Campaign> campaigns = campaignDAO.findCampaignsWithPositiveBalanceByKeywords(keywords);
-            while(!campaigns.isEmpty()) {
+            while (!campaigns.isEmpty()) {
                 Campaign campaign = campaigns.get(random.nextInt(campaigns.size()));
                 campaigns.remove(campaign);
-                if(tryToBidOnCampaign(campaign)){
+                if (tryToBidOnCampaign(campaign)) {
                     return true;
                 }
             }
@@ -114,7 +112,7 @@ public class BidsResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     public Response createBid(@NotNull @Valid BidParam bidParam) {
-        if(tryToBid(bidParam.getKeywords())){
+        if (tryToBid(bidParam.getKeywords())) {
             BidResult result = new BidResult(bidParam.getBidId(), BID_AMOUNT);
             return Response.ok(result).build();
         } else {
@@ -130,7 +128,7 @@ public class BidsResource {
      * @param keywords The keywords to search in the campaigns to bid for.
      * @return Success flag, true if the bid is successful, false otherwise.
      */
-    private boolean tryToBid(String[] keywords){
+    private boolean tryToBid(String[] keywords) {
         // This creation mechanism ensures that the @UnitOfWork annotation can be added to methods of the created
         // TryToBidCallable instance.
         UnitOfWorkAwareProxyFactory unitOfWorkAwareProxyFactory = new UnitOfWorkAwareProxyFactory(hibernateBundle);

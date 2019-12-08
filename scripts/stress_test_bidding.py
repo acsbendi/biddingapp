@@ -11,7 +11,10 @@ def create_bidding(i):
     response = requests.post(url, json=data)
     print(f"{response} - {response.elapsed.total_seconds()}")
 
+threads = []
 for i in range(0, NUMBER_OF_BIDDING_TO_CREATE):
-    time.sleep(0.01)
-    t = threading.Thread(target=functools.partial(create_bidding, i + 1))
+    #time.sleep(0.01)
+    threads.append(threading.Thread(target=functools.partial(create_bidding, i + 1)))
+
+for t in threads:
     t.start()
