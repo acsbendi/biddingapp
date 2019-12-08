@@ -33,17 +33,15 @@ public class BidsResource {
 
     /**
      * This static nested class is used to decouple the execution of bidding so it can ensured that it will always
-     * take less than BID_TIMEOUT_IN_MILLISECONDS.
+     * take less than {@code BID_TIMEOUT_IN_MILLISECONDS}.
      * <p>
-     * It needs to be implemented in a separate class so we can use the @UnitOfWork annotation to access the database
+     * It needs to be implemented in a separate class so we can use the {@code @UnitOfWork} annotation to access the database
      * without having to worry about session management.
      * <p>
      * Also, a static class is needed because its instantiation happens outside of BidsResource
-     * (in the UnitOfWorkAwareProxyFactory.created method).
+     * (in the {@code UnitOfWorkAwareProxyFactory.created} method).
      */
     private static class TryToBidCallable implements Callable<Boolean> {
-        private static final Logger LOGGER = LoggerFactory.getLogger(TryToBidCallable.class);
-
         private final Random random = new Random();
         private final CampaignDAO campaignDAO;
         private final String[] keywords;
@@ -96,8 +94,8 @@ public class BidsResource {
     private final ExecutorService executorService;
     private final BidSynchronizer bidSynchronizer;
     /**
-     * This field is used to create TryToBidCallable instances through the UnitOfWorkAwareProxyFactory so
-     * the @UnitOfWork annotation can be added to these instances.
+     * This field is used to create {@code TryToBidCallable} instances through the {@code UnitOfWorkAwareProxyFactory}
+     * so the {@code @UnitOfWork} annotation can be added to these instances.
      */
     private final HibernateBundle<BiddingConfiguration> hibernateBundle;
 
@@ -122,11 +120,12 @@ public class BidsResource {
 
     /**
      * Tries to place a bid by searching a campaign that contains one of the specified keywords.
-     * This function is guaranteed to return after 500 milliseconds, if there is something preventing the bid from
-     * succeeding in this time frame, the bidding attempt is cancelled and false is returned.
+     * This function is guaranteed to return after {@code BID_TIMEOUT_IN_MILLISECONDS} milliseconds, if there is
+     * something preventing the bid from succeeding in this time frame, the bidding attempt is cancelled and
+     * {@code false} is returned.
      *
      * @param keywords The keywords to search in the campaigns to bid for.
-     * @return Success flag, true if the bid is successful, false otherwise.
+     * @return a success flag, {@code true} if the bid is successful, {@code false} otherwise.
      */
     private boolean tryToBid(String[] keywords) {
         // This creation mechanism ensures that the @UnitOfWork annotation can be added to methods of the created

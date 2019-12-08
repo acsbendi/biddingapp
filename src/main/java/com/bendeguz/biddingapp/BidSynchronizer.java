@@ -8,6 +8,16 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Semaphore;
 
+/**
+ * This class provides mechanisms to check whether a campaign is available for bidding and to handle concurrency between bids.
+ * To ensure that no more spending than {@code MAXIMUM_SPENDING_PER_CAMPAIGN_PER_10_SEC} occurs per 10 sec,
+ * the following methods needs to be called in this order:
+ * 1. lockCampaign - to lock the campaign so no other concurrent request can access it
+ * 2. isCampaignAvailable - to check if the previously mentioned limit is not exceeded
+ * 3. spendOnCampaign - if the caller will attempt to spend on the campaign (this attempt will probably succeed).
+ * 4. unlockCampaign - it is <b>crucial</b> to make sure this method gets called, because otherwise the campaign
+ *                     will become unavailable for bidding until the application is restarted.
+ */
 public class BidSynchronizer {
     private static final double MAXIMUM_SPENDING_PER_CAMPAIGN_PER_10_SEC = 10.0;
 
@@ -47,11 +57,11 @@ public class BidSynchronizer {
      * Checks whether a campaign specified by its ID is available for bidding. It is available only if the spending
      * on the campaign in the past 10 seconds does not exceed 10 NOK.
      *
-     * The referenced campaign MUST be locked before calling this method by lockCampaign.
+     * The referenced campaign MUST be locked by {@code lockCampaign} before calling this method.
      * This will ensure that the bidding operations are serializable.
      *
      * @param id The ID of the campaign.
-     * @return Whether is the campaign available for spending or not.
+     * @return whether the campaign is available for spending or not.
      */
     public boolean isCampaignAvailable(long id){
         double totalSpendingInPast10Sec = 0;
@@ -66,7 +76,7 @@ public class BidSynchronizer {
     /**
      * Registers a spending on a campaign specified by its ID.
      *
-     * The referenced campaign MUST be locked before calling this method by lockCampaign.
+     * The referenced campaign MUST be locked by {@code lockCampaign} before calling this method.
      * This will ensure that the bidding operations are serializable.
      *
      * @param id The ID of the campaign.

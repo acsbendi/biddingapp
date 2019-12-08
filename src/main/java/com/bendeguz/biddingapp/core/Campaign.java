@@ -2,10 +2,7 @@ package com.bendeguz.biddingapp.core;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 @Entity
 @Table(name = "campaigns")
@@ -27,7 +24,7 @@ import java.util.Set;
 public class Campaign {
     public static final String QUERY_FIND_ALL = "com.bendeguz.biddingapp.core.Campaign.findAll";
     /**
-     * Query to increase a Campaign's spending by the specified amount. Succeeds only if the campaign's balance
+     * Query to increase a campaign's spending by the specified amount. Succeeds only if the campaign's balance
      * (budget - spending) remains 0 or greater after the spending increase. Returns the number of updates
      * (i.e. 1 if it succeeds, 0 if it doesn't).
      */
@@ -51,18 +48,16 @@ public class Campaign {
 
     /**
      * Perhaps it's not the most obvious solution to use a Set but everything else failed to work:
-     * <p>
      * - When I tried to map the field to h2's built-in array type, the following exception occurred:
-     * org.h2.jdbc.JdbcSQLException: Hexadecimal string contains non-hex character
-     * As I could not find any sources online regarding this mapping, I concluded this is not possible.
-     * <p>
-     * - When I tried to use Array[] with ElementCollection and CollectionTable, the following exception occurred:
-     * org.hibernate.AnnotationException: List/array has to be annotated with an @OrderColumn
-     * As far as I could find out, this means that I should create another column just for the ordering.
-     * I think this solution would have been more hacky, so I went with using a Set type instead.
+     *   {@code org.h2.jdbc.JdbcSQLException}: Hexadecimal string contains non-hex character
+     *   As I could not find any sources online regarding this mapping, I concluded this is not possible.
+     * - When I tried to use {@code Array[]} with {@code @ElementCollection} and {@code @CollectionTable}, the following exception occurred:
+     *   {@code org.hibernate.AnnotationException}: List/array has to be annotated with an {@code @OrderColumn}
+     *   As far as I could find out, this means that I should create another column just for the ordering.
+     *   I think this solution would have been more hacky, so I went with using a Set type instead.
      * <p>
      * I also think that it makes sense to use a set, as a duplicate keyword wouldn't add any value anyway.
-     * This is why I decided to use a Set instead of a List.
+     * This is why I decided to use a {@link Set} instead of a {@link List}.
      */
     @ElementCollection
     @CollectionTable(
