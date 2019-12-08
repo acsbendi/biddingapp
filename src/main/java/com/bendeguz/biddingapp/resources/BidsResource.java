@@ -56,7 +56,7 @@ public class BidsResource {
         private boolean tryToBidOnCampaign(Campaign campaign) throws InterruptedException {
             try {
                 bidSynchronizer.lockCampaign(campaign.getId());
-                if (bidSynchronizer.isCampaignAvailable(campaign.getId())) {
+                if (bidSynchronizer.isCampaignAvailableForSpending(campaign.getId(), BID_AMOUNT)) {
                     // Check if thread has been interrupted - proceed only if not.
                     // This helps ensure that the bidding never takes longer than BID_TIMEOUT_IN_MILLISECONDS.
                     if (Thread.interrupted()) {

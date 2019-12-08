@@ -54,23 +54,25 @@ public class BidSynchronizer {
     }
 
     /**
-     * Checks whether a campaign specified by its ID is available for bidding. It is available only if the spending
-     * on the campaign in the past 10 seconds does not exceed 10 NOK.
+     * Checks whether a campaign specified by its ID is available for bidding with the specified amount.
+     * It is available only if sum of the spending on the campaign in the past 10 seconds and the specified amount
+     * does not exceed 10 NOK.
      *
      * The referenced campaign MUST be locked by {@code lockCampaign} before calling this method.
      * This will ensure that the bidding operations are serializable.
      *
      * @param id The ID of the campaign.
+     * @param amount The amount of spending.
      * @return whether the campaign is available for spending or not.
      */
-    public boolean isCampaignAvailable(long id){
+    public boolean isCampaignAvailableForSpending(long id, double amount){
         double totalSpendingInPast10Sec = 0;
         List<Spending> spendings = campaignSpendingMap.get(id);
         spendings.removeIf(Spending::isOlderThan10Sec);
         for(Spending spending : spendings){
             totalSpendingInPast10Sec += spending.getAmount();
         }
-        return totalSpendingInPast10Sec < MAXIMUM_SPENDING_PER_CAMPAIGN_PER_10_SEC;
+        return totalSpendingInPast10Sec + amount <= MAXIMUM_SPENDING_PER_CAMPAIGN_PER_10_SEC;
     }
 
     /**
