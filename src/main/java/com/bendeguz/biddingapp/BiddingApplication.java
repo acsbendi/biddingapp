@@ -26,7 +26,8 @@ public class BiddingApplication extends Application<BiddingConfiguration> {
                     return configuration.getDataSourceFactory();
                 }
             };
-    private ExecutorService executorService = Executors.newCachedThreadPool();
+    private final ExecutorService executorService = Executors.newCachedThreadPool();
+    private final BidSynchronizer bidSynchronizer = new BidSynchronizer();
 
     @Override
     public String getName() {
@@ -50,7 +51,7 @@ public class BiddingApplication extends Application<BiddingConfiguration> {
         final CampaignDAO campaignDAO = new CampaignDAO(hibernateBundle.getSessionFactory());
 
         final CampaignsResource campaignsResource = new CampaignsResource(campaignDAO);
-        final BidsResource bidsResource = new BidsResource(campaignDAO, executorService, hibernateBundle);
+        final BidsResource bidsResource = new BidsResource(campaignDAO, executorService, hibernateBundle, bidSynchronizer);
         environment.jersey().register(campaignsResource);
         environment.jersey().register(bidsResource);
     }

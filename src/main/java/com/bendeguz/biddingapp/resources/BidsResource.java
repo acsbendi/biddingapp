@@ -1,5 +1,6 @@
 package com.bendeguz.biddingapp.resources;
 
+import com.bendeguz.biddingapp.BidSynchronizer;
 import com.bendeguz.biddingapp.BiddingConfiguration;
 import com.bendeguz.biddingapp.api.BidParam;
 import com.bendeguz.biddingapp.api.BidResult;
@@ -44,22 +45,50 @@ public class BidsResource {
         private final Random random = new Random();
         private final CampaignDAO campaignDAO;
         private final String[] keywords;
+        private final BidSynchronizer bidSynchronizer;
 
-        TryToBidCallable(CampaignDAO campaignDAO, String[] keywords){
+        TryToBidCallable(CampaignDAO campaignDAO, String[] keywords, BidSynchronizer bidSynchronizer){
             this.campaignDAO = campaignDAO;
             this.keywords = keywords;
+            this.bidSynchronizer = bidSynchronizer;
+        }
+
+        private boolean tryToBidOnCampaign(Campaign campaign) throws InterruptedException{
+            try{
+                bidSynchronizer.lockCampaign(campaign.getId());
+                if(bidSynchronizer.isCampaignAvailable(campaign.getId())){
+                    double currentSpending = campaign.getSpending();
+                    campaign.setSpending(currentSpending + BID_AMOUNT);
+
+                    // Check if thread has been interrupted - proceed only if not.
+                    // This helps ensure that the bidding never takes longer than BID_TIMEOUT_IN_MILLISECONDS.
+                    if(Thread.interrupted()){
+                        throw new InterruptedException();
+                    }
+
+                    // Saving the fact of spending first - this helps ensure that no excessive spending is ever carried out.
+                    // Note that the spending might not actually happen (if the save method fails for example due to
+                    // an interrupt event), but this is not a serious problem, since the caller will still see it as failure.
+                    bidSynchronizer.spendOnCampaign(campaign.getId(), BID_AMOUNT);
+                    campaignDAO.save(campaign);
+                    return true;
+                }
+            } finally {
+                bidSynchronizer.unlockCampaign(campaign.getId());
+            }
+            return false;
         }
 
         @Override
         @UnitOfWork
-        public Boolean call() {
+        public Boolean call() throws Exception {
             List<Campaign> campaigns = campaignDAO.findCampaignsWithPositiveBalanceByKeywords(keywords);
-            if(!campaigns.isEmpty()) {
+            while(!campaigns.isEmpty()) {
                 Campaign campaign = campaigns.get(random.nextInt(campaigns.size()));
-                double currentSpending = campaign.getSpending();
-                campaign.setSpending(currentSpending + BID_AMOUNT);
-                campaignDAO.save(campaign);
-                return true;
+                campaigns.remove(campaign);
+                if(tryToBidOnCampaign(campaign)){
+                    return true;
+                }
             }
             return false;
         }
@@ -67,16 +96,19 @@ public class BidsResource {
 
     private final CampaignDAO campaignDAO;
     private final ExecutorService executorService;
+    private final BidSynchronizer bidSynchronizer;
     /**
      * This field is used to create TryToBidCallable instances through the UnitOfWorkAwareProxyFactory so
      * the @UnitOfWork annotation can be added to these instances.
      */
     private final HibernateBundle<BiddingConfiguration> hibernateBundle;
 
-    public BidsResource(CampaignDAO campaignDAO, ExecutorService executorService, HibernateBundle<BiddingConfiguration> hibernateBundle) {
+    public BidsResource(CampaignDAO campaignDAO, ExecutorService executorService,
+                        HibernateBundle<BiddingConfiguration> hibernateBundle, BidSynchronizer bidSynchronizer) {
         this.campaignDAO = campaignDAO;
         this.executorService = executorService;
         this.hibernateBundle = hibernateBundle;
+        this.bidSynchronizer = bidSynchronizer;
     }
 
     @POST
@@ -104,8 +136,8 @@ public class BidsResource {
         UnitOfWorkAwareProxyFactory unitOfWorkAwareProxyFactory = new UnitOfWorkAwareProxyFactory(hibernateBundle);
         TryToBidCallable tryToBidCallable = unitOfWorkAwareProxyFactory.create(
                 TryToBidCallable.class,
-                new Class[]{CampaignDAO.class, String[].class},
-                new Object[]{campaignDAO, keywords}
+                new Class[]{CampaignDAO.class, String[].class, BidSynchronizer.class},
+                new Object[]{campaignDAO, keywords, bidSynchronizer}
         );
         Future<Boolean> tryToBidFuture = executorService.submit(tryToBidCallable);
 

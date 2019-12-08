@@ -3,7 +3,7 @@ import threading
 import time
 import functools
 
-NUMBER_OF_BIDDING_TO_CREATE = 10
+NUMBER_OF_BIDDING_TO_CREATE = 20
 
 def create_bidding(i):
     data = { "bidId": i, "keywords": ["Kobler"]}
