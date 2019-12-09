@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import java.time.Duration;
 import java.time.Instant;
 
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatCode;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 
@@ -89,6 +90,32 @@ public class BidSynchronizerTest {
             assertThat(bidSynchronizer.isCampaignAvailableForSpending(campaignId, 5)).isTrue();
             bidSynchronizer.spendOnCampaign(campaignId, 5);
             bidSynchronizer.unlockCampaign(campaignId);
+        }).doesNotThrowAnyException();
+    }
+
+    @Test
+    public void accessWithoutLockException(){
+        long campaignId = 1;
+        assertThatExceptionOfType(IllegalThreadStateException.class).isThrownBy(() -> bidSynchronizer.isCampaignAvailableForSpending(campaignId, 10));
+        assertThatExceptionOfType(IllegalThreadStateException.class).isThrownBy(() -> bidSynchronizer.spendOnCampaign(campaignId, 10));
+
+        Thread thread1 = new Thread(() -> {
+            assertThatCode(() -> {
+                bidSynchronizer.lockCampaign(campaignId);
+                Thread.sleep(500);
+                bidSynchronizer.unlockCampaign(campaignId);
+            }).doesNotThrowAnyException();
+        });
+        Thread thread2 = new Thread(() -> {
+            assertThatExceptionOfType(IllegalThreadStateException.class).isThrownBy(() -> bidSynchronizer.isCampaignAvailableForSpending(campaignId, 10));
+            assertThatExceptionOfType(IllegalThreadStateException.class).isThrownBy(() -> bidSynchronizer.spendOnCampaign(campaignId, 10));
+        });
+        thread1.start();
+        assertThatCode(() -> Thread.sleep(50)).doesNotThrowAnyException();
+        thread2.start();
+        assertThatCode(() -> {
+            thread1.join();
+            thread2.join();
         }).doesNotThrowAnyException();
     }
 }
