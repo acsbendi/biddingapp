@@ -3,7 +3,6 @@ package com.bendeguz.biddingapp.resources;
 import com.bendeguz.biddingapp.api.CampaignParam;
 import com.bendeguz.biddingapp.core.Campaign;
 import com.bendeguz.biddingapp.db.CampaignDAO;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.ImmutableList;
 import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
 import io.dropwizard.testing.junit5.ResourceExtension;
@@ -30,18 +29,18 @@ import static org.mockito.Mockito.when;
  * Unit tests for {@link CampaignsResource}.
  */
 @ExtendWith(DropwizardExtensionsSupport.class)
-public class CampaignsResourceTest {
+class CampaignsResourceTest {
     private static final CampaignDAO CAMPAIGN_DAO = mock(CampaignDAO.class);
-    public static final ResourceExtension RESOURCES = ResourceExtension.builder()
+    private static final ResourceExtension RESOURCES = ResourceExtension.builder()
             .addResource(new CampaignsResource(CAMPAIGN_DAO))
             .build();
-    private ArgumentCaptor<Campaign> campaignCaptor = ArgumentCaptor.forClass(Campaign.class);
-    private ArgumentCaptor<Long> campaignIdCaptor = ArgumentCaptor.forClass(Long.class);
+    private final ArgumentCaptor<Campaign> campaignCaptor = ArgumentCaptor.forClass(Campaign.class);
+    private final ArgumentCaptor<Long> campaignIdCaptor = ArgumentCaptor.forClass(Long.class);
     private Campaign campaign1;
     private Campaign campaign2;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         campaign1 = new Campaign();
         campaign1.setName("Test Campaign");
         campaign1.setKeywords(new HashSet<>(Collections.singletonList("Keyword 1")));
@@ -53,12 +52,12 @@ public class CampaignsResourceTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         reset(CAMPAIGN_DAO);
     }
 
     @Test
-    public void createCampaign() throws JsonProcessingException {
+    void createCampaign() {
         when(CAMPAIGN_DAO.create(any(Campaign.class))).thenReturn(campaign1);
         CampaignParam campaignParam = new CampaignParam("Test Campaign", new String[]{"Keyword 1"}, 100.0);
         final Response response = RESOURCES.target("/campaigns")
@@ -71,7 +70,7 @@ public class CampaignsResourceTest {
     }
 
     @Test
-    public void listCampaigns() throws Exception {
+    void listCampaigns() {
         final List<Campaign> campaigns = ImmutableList.of(campaign1, campaign2);
         when(CAMPAIGN_DAO.findAll()).thenReturn(campaigns);
 
@@ -84,7 +83,7 @@ public class CampaignsResourceTest {
     }
 
     @Test
-    public void getCampaign() throws Exception {
+    void getCampaign() {
         when(CAMPAIGN_DAO.findById(any(Long.class))).thenReturn(Optional.of(campaign1));
         final Response response = RESOURCES.target("/campaigns/" + campaign1.getId())
                 .request()
@@ -101,7 +100,7 @@ public class CampaignsResourceTest {
     }
 
     @Test
-    public void getCampaignNotFound() throws Exception {
+    void getCampaignNotFound() {
         when(CAMPAIGN_DAO.findById(any(Long.class))).thenReturn(Optional.empty());
         final Response response = RESOURCES.target("/campaigns/324234")
                 .request()

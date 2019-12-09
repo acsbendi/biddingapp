@@ -21,17 +21,17 @@ import java.io.IOException;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(DropwizardExtensionsSupport.class)
-public class IntegrationTest {
+class IntegrationTest {
 
     private static final String TMP_FILE = createTempFile();
     private static final String CONFIG_PATH = ResourceHelpers.resourceFilePath("test-biddingapp.yml");
 
-    public static final DropwizardAppExtension<BiddingConfiguration> RULE = new DropwizardAppExtension<>(
+    private static final DropwizardAppExtension<BiddingConfiguration> RULE = new DropwizardAppExtension<>(
             BiddingApplication.class, CONFIG_PATH,
             ConfigOverride.config("database.url", "jdbc:h2:" + TMP_FILE));
 
     @BeforeAll
-    public static void migrateDb() throws Exception {
+    static void migrateDb() throws Exception {
         RULE.getApplication().run("db", "migrate", CONFIG_PATH);
     }
 
@@ -44,7 +44,7 @@ public class IntegrationTest {
     }
 
     @Test
-    public void testPostAndGetCampaign() {
+    void testPostAndGetCampaign() {
         final CampaignParam campaignParam = new CampaignParam("Test Campaign 1", new String[]{"Test Keyword"}, 100.0);
         final Campaign createdCampaign = postAndGetCampaign(campaignParam);
 
@@ -67,7 +67,7 @@ public class IntegrationTest {
     }
 
     @Test
-    public void testListCampaigns(){
+    void testListCampaigns(){
         CampaignParam campaignParam1 = new CampaignParam("Test Campaign 11", new String[]{"Kobler"}, 150.0);
         CampaignParam campaignParam2 = new CampaignParam("Test Campaign 12", new String[]{"Test Keyword 10", "Kobler 2", "Test 2"}, 2500.0);
         createCampaign(campaignParam1);
@@ -92,7 +92,7 @@ public class IntegrationTest {
     }
 
     @Test
-    public void testSuccessfulBid(){
+    void testSuccessfulBid(){
         CampaignParam campaignParam = new CampaignParam("Test Campaign 111", new String[]{"Keyword 1"}, 55.0);
         createCampaign(campaignParam);
 
@@ -106,14 +106,14 @@ public class IntegrationTest {
     }
 
     @Test
-    public void testUnsuccessfulBid() {
+    void testUnsuccessfulBid() {
         BidParam bidParam = new BidParam(1, new String[]{"Non Existent Keyword"});
         Response response = createBid(bidParam);
         assertThat(response.getStatusInfo()).isEqualTo(Response.Status.NO_CONTENT);
     }
 
     @Test
-    public void testCampaignBalance(){
+    void testCampaignBalance(){
         CampaignParam campaignParam = new CampaignParam("Campaign Balance", new String[]{"Campaign Balance Keyword"}, 1.0);
         createCampaign(campaignParam);
 
@@ -127,7 +127,7 @@ public class IntegrationTest {
     }
 
     @Test
-    public void testMaximumSpendingPer10Sec(){
+    void testMaximumSpendingPer10Sec(){
         CampaignParam campaignParam = new CampaignParam("Maximum Spending", new String[]{"Maximum Spending Keyword"}, 400.0);
         createCampaign(campaignParam);
 

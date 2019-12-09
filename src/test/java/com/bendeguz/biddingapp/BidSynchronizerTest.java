@@ -13,35 +13,31 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatCode;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 
 @ExtendWith(DropwizardExtensionsSupport.class)
-public class BidSynchronizerTest {
+class BidSynchronizerTest {
 
     private BidSynchronizer bidSynchronizer;
 
     @BeforeEach
-    public void setUp() throws Exception {
+    void setUp() {
         bidSynchronizer = new BidSynchronizer();
     }
 
     @Test
-    public void lock(){
+    void lock(){
         long campaignId = 1;
-        Thread thread1 = new Thread(() -> {
-            assertThatCode(() -> {
-                bidSynchronizer.lockCampaign(campaignId);
-                Thread.sleep(500);
-                bidSynchronizer.unlockCampaign(campaignId);
-            }).doesNotThrowAnyException();
-        });
-        Thread thread2 = new Thread(() -> {
-            assertThatCode(() -> {
-                Instant beforeLockAcquired = Instant.now();
-                bidSynchronizer.lockCampaign(campaignId);
-                Instant afterLockAcquired = Instant.now();
-                Duration lockAcquisitionDuration = Duration.between(beforeLockAcquired, afterLockAcquired);
-                assertThat(lockAcquisitionDuration).isGreaterThan(Duration.ofMillis(400));
-                bidSynchronizer.unlockCampaign(campaignId);
-            }).doesNotThrowAnyException();
-        });
+        Thread thread1 = new Thread(() -> assertThatCode(() -> {
+            bidSynchronizer.lockCampaign(campaignId);
+            Thread.sleep(500);
+            bidSynchronizer.unlockCampaign(campaignId);
+        }).doesNotThrowAnyException());
+        Thread thread2 = new Thread(() -> assertThatCode(() -> {
+            Instant beforeLockAcquired = Instant.now();
+            bidSynchronizer.lockCampaign(campaignId);
+            Instant afterLockAcquired = Instant.now();
+            Duration lockAcquisitionDuration = Duration.between(beforeLockAcquired, afterLockAcquired);
+            assertThat(lockAcquisitionDuration).isGreaterThan(Duration.ofMillis(400));
+            bidSynchronizer.unlockCampaign(campaignId);
+        }).doesNotThrowAnyException());
         thread1.start();
         assertThatCode(() -> Thread.sleep(50)).doesNotThrowAnyException();
         thread2.start();
@@ -59,7 +55,7 @@ public class BidSynchronizerTest {
      * since 1.0001+9 > 10 so the first 2 spendings will be too old to be included in the spendings of the past 10 seconds.
      */
     @Test
-    public void spending(){
+    void spending(){
         long campaignId = 1;
         assertThatCode(() -> {
             bidSynchronizer.lockCampaign(campaignId);
@@ -94,18 +90,16 @@ public class BidSynchronizerTest {
     }
 
     @Test
-    public void accessWithoutLockException(){
+    void accessWithoutLockException(){
         long campaignId = 1;
         assertThatExceptionOfType(IllegalThreadStateException.class).isThrownBy(() -> bidSynchronizer.isCampaignAvailableForSpending(campaignId, 10));
         assertThatExceptionOfType(IllegalThreadStateException.class).isThrownBy(() -> bidSynchronizer.spendOnCampaign(campaignId, 10));
 
-        Thread thread1 = new Thread(() -> {
-            assertThatCode(() -> {
-                bidSynchronizer.lockCampaign(campaignId);
-                Thread.sleep(500);
-                bidSynchronizer.unlockCampaign(campaignId);
-            }).doesNotThrowAnyException();
-        });
+        Thread thread1 = new Thread(() -> assertThatCode(() -> {
+            bidSynchronizer.lockCampaign(campaignId);
+            Thread.sleep(500);
+            bidSynchronizer.unlockCampaign(campaignId);
+        }).doesNotThrowAnyException());
         Thread thread2 = new Thread(() -> {
             assertThatExceptionOfType(IllegalThreadStateException.class).isThrownBy(() -> bidSynchronizer.isCampaignAvailableForSpending(campaignId, 10));
             assertThatExceptionOfType(IllegalThreadStateException.class).isThrownBy(() -> bidSynchronizer.spendOnCampaign(campaignId, 10));

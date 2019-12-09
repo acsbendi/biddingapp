@@ -24,14 +24,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for {@link BidsResource}.
  */
 @ExtendWith(DropwizardExtensionsSupport.class)
-public class BidsResourceTest {
+class BidsResourceTest {
     /**
      * This class is used to make {@link HibernateBundle}'s {@code name()} method public.
      * Otherwise, we cannot mock the {@code name()} method and the tests will fail with a {@code NullPointerException}.
@@ -54,16 +53,16 @@ public class BidsResourceTest {
     private static final SessionFactory SESSION_FACTORY = mock(SessionFactory.class);
     private static final Session SESSION = mock(Session.class);
     private static final BidSynchronizer BID_SYNCHRONIZER = new BidSynchronizer();
-    public static final ResourceExtension RESOURCES = ResourceExtension.builder()
+    private static final ResourceExtension RESOURCES = ResourceExtension.builder()
             .addResource(new BidsResource(CAMPAIGN_DAO, EXECUTOR_SERVICE, HIBERNATE_BUNDLE, BID_SYNCHRONIZER))
             .build();
 
-    private ArgumentCaptor<String[]> keywordArrayCaptor = ArgumentCaptor.forClass(String[].class);
-    private ArgumentCaptor<Campaign> campaignCaptor = ArgumentCaptor.forClass(Campaign.class);
+    private final ArgumentCaptor<String[]> keywordArrayCaptor = ArgumentCaptor.forClass(String[].class);
+    private final ArgumentCaptor<Campaign> campaignCaptor = ArgumentCaptor.forClass(Campaign.class);
     private Campaign campaign;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         campaign = new Campaign();
         campaign.setName("Test Campaign");
         campaign.setKeywords(new HashSet<>(Collections.singletonList("Keyword 1")));
@@ -71,12 +70,12 @@ public class BidsResourceTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         reset(CAMPAIGN_DAO);
     }
 
     @Test
-    public void createBid(){
+    void createBid(){
         when(CAMPAIGN_DAO.findCampaignsWithPositiveBalanceByKeywords(any(String[].class))).thenReturn(
                 new ArrayList<>(Collections.singletonList(campaign))
         );
@@ -103,7 +102,7 @@ public class BidsResourceTest {
     }
 
     @Test
-    public void createBidUnsuccessfulUpdate(){
+    void createBidUnsuccessfulUpdate(){
         when(CAMPAIGN_DAO.findCampaignsWithPositiveBalanceByKeywords(any(String[].class))).thenReturn(
                 new ArrayList<>(Collections.singletonList(campaign))
         );
@@ -127,7 +126,7 @@ public class BidsResourceTest {
     }
 
     @Test
-    public void createBidUnsuccessfulNoMatchingKeywords(){
+    void createBidUnsuccessfulNoMatchingKeywords(){
         when(CAMPAIGN_DAO.findCampaignsWithPositiveBalanceByKeywords(any(String[].class))).thenReturn(new ArrayList<>());
         // The following mocks needs to be set up so we will not run into NullPointerException when various methods of
         // HIBERNATE_BUNDLE are called.

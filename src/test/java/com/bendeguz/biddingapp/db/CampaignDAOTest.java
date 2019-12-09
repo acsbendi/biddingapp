@@ -15,21 +15,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 @ExtendWith(DropwizardExtensionsSupport.class)
-public class CampaignDAOTest {
+class CampaignDAOTest {
 
-    public DAOTestExtension daoTestRule = DAOTestExtension.newBuilder()
+    private final DAOTestExtension daoTestRule = DAOTestExtension.newBuilder()
             .addEntityClass(Campaign.class)
             .build();
 
     private CampaignDAO campaignDAO;
 
     @BeforeEach
-    public void setUp() throws Exception {
+    void setUp() {
         campaignDAO = new CampaignDAO(daoTestRule.getSessionFactory());
     }
 
     @Test
-    public void createCampaign() {
+    void createCampaign() {
         final Campaign testCampaign = daoTestRule.inTransaction(
                 () -> campaignDAO.create(new Campaign("Test Campaign", new String[]{"Kobler", "Contextual"}, 1000.0)));
         assertThat(testCampaign.getId()).isGreaterThan(0);
@@ -41,7 +41,7 @@ public class CampaignDAOTest {
     }
 
     @Test
-    public void findAll() {
+    void findAll() {
         daoTestRule.inTransaction(() -> {
             campaignDAO.create(new Campaign("Test Campaign", new String[]{"Kobler", "Contextual"}, 1000.0));
             campaignDAO.create(new Campaign("Test Campaign 2", new String[]{"Kobler", "Contextual"}, 1200.0));
@@ -56,13 +56,13 @@ public class CampaignDAOTest {
     }
 
     @Test
-    public void handlesNullName() {
+    void handlesNullName() {
         assertThatExceptionOfType(ConstraintViolationException.class).isThrownBy(() ->
                 daoTestRule.inTransaction(() -> campaignDAO.create(new Campaign(null, new String[]{"Kobler"}, 100.0))));
     }
 
     @Test
-    public void findCampaignsByOneKeyword() {
+    void findCampaignsByOneKeyword() {
         daoTestRule.inTransaction(() -> {
             campaignDAO.create(new Campaign("Test Campaign", new String[]{"Kobler", "Contextual"}, 1000.0));
             campaignDAO.create(new Campaign("Test Campaign 2", new String[]{"Kobler", "Contextual"}, 1200.0));
@@ -75,7 +75,7 @@ public class CampaignDAOTest {
     }
 
     @Test
-    public void findCampaignsByMultipleKeywords() {
+    void findCampaignsByMultipleKeywords() {
         daoTestRule.inTransaction(() -> {
             campaignDAO.create(new Campaign("Test Campaign", new String[]{"Contextual"}, 1000.0));
             campaignDAO.create(new Campaign("Test Campaign 2", new String[]{"Kobler 3", "Keyword"}, 1200.0));
@@ -88,7 +88,7 @@ public class CampaignDAOTest {
     }
 
     @Test
-    public void findCampaignsWithNoBalance() {
+    void findCampaignsWithNoBalance() {
         daoTestRule.inTransaction(() -> {
             Campaign campaign = new Campaign("Test Campaign", new String[]{"Contextual"}, 1000.0);
             campaign.setSpending(1000.0);
@@ -100,7 +100,7 @@ public class CampaignDAOTest {
     }
 
     @Test
-    public void tryToIncreaseSpending() {
+    void tryToIncreaseSpending() {
         final Campaign testCampaign = daoTestRule.inTransaction(
                 () -> campaignDAO.create(new Campaign("Test Campaign", new String[]{"Kobler", "Contextual"}, 1000.0)));
 
@@ -112,7 +112,7 @@ public class CampaignDAOTest {
     }
 
     @Test
-    public void tryToIncreaseSpendingFailure() {
+    void tryToIncreaseSpendingFailure() {
         final Campaign testCampaign = daoTestRule.inTransaction(
                 () -> campaignDAO.create(new Campaign("Test Campaign", new String[]{"Kobler", "Contextual"}, 5.0)));
 
