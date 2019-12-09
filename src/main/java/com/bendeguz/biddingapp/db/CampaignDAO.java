@@ -44,9 +44,12 @@ public class CampaignDAO extends AbstractDAO<Campaign> {
 
     /**
      * Tries to increase the spending for a {@link Campaign}.
+     * <p>
+     * In general, it should succeed, the only exception is when there are multiple concurrent requests to increase spending
+     * for the same campaign, and the campaign's balance reaches 0 before all of these concurrent requests finish.
      *
      * @param campaign The campaign to increase spending for.
-     * @param amount The amount by which to increase the spending.
+     * @param amount   The amount by which to increase the spending.
      * @return a success flag, {@code true} if the increase is successful, {@code false} otherwise.
      */
     public boolean tryToIncreaseSpending(Campaign campaign, double amount) {
