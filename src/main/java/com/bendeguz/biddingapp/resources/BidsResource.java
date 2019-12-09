@@ -138,6 +138,19 @@ public class BidsResource {
         );
         Future<Boolean> tryToBidFuture = executorService.submit(tryToBidCallable);
 
+        return getSuccessFlagFromTryToBidFuture(tryToBidFuture);
+    }
+
+    /**
+     * Determines and returns the success flag from the {@link Future} object which represents the execution of a bid.
+     * This method will interrupt the future after {@code BID_TIMEOUT_IN_MILLISECONDS} milliseconds.
+     * If the interrupt fails, the result of the future is awaited without further timeout - this is to ensure that
+     * the client will always see the right status code.
+     *
+     * @param tryToBidFuture A {@link Future} object representing the execution of a bid.
+     * @return whether the bid was successful.
+     */
+    private boolean getSuccessFlagFromTryToBidFuture(Future<Boolean> tryToBidFuture) {
         try {
             return tryToBidFuture.get(BID_TIMEOUT_IN_MILLISECONDS, TimeUnit.MILLISECONDS);
         } catch (InterruptedException | ExecutionException e) {
@@ -145,8 +158,17 @@ public class BidsResource {
             return false;
         } catch (TimeoutException e) {
             LOGGER.info("Cancelling bid due to timeout");
-            tryToBidFuture.cancel(true);
-            return false;
+            if(tryToBidFuture.cancel(true)){
+                return false;
+            } else { // the bidding job should be done
+                LOGGER.warn("The bidding job could not be cancelled - waiting for a result...");
+                try {
+                    return tryToBidFuture.get();
+                } catch (InterruptedException | ExecutionException ex) {
+                    LOGGER.warn("Exception occurred while trying to place a bid: ", ex);
+                    return false;
+                }
+            }
         }
     }
 }
