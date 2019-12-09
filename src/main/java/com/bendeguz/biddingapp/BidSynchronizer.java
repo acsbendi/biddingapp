@@ -67,7 +67,7 @@ public class BidSynchronizer {
      * @return whether the campaign is available for spending or not.
      */
     public boolean isCampaignAvailableForSpending(long id, double amount) {
-        if (!campaignLockMap.get(id).isHeldByCurrentThread()) {
+        if (!campaignLockMap.containsKey(id) || !campaignLockMap.get(id).isHeldByCurrentThread()) {
             throw new IllegalThreadStateException();
         }
         double totalSpendingInPast10Sec = 0;
@@ -90,7 +90,7 @@ public class BidSynchronizer {
      * @param amount The amount of spending.
      */
     public void spendOnCampaign(long id, double amount) {
-        if (!campaignLockMap.get(id).isHeldByCurrentThread()) {
+        if (!campaignLockMap.containsKey(id) || !campaignLockMap.get(id).isHeldByCurrentThread()) {
             throw new IllegalThreadStateException();
         }
         List<Spending> spendings = campaignSpendingMap.get(id);
