@@ -1,1 +1,0 @@
-curl --include --header "Content-Type: application/json" --request POST --data "{\"name\":\"Test\", \"keywords\": [\"Kobler\"], \"budget\": 100.0}" http://localhost:8080/campaigns
