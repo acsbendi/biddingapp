@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * This class provides mechanisms to check whether a campaign is available for bidding and to handle concurrency between bids.
@@ -41,16 +41,16 @@ public class BidSynchronizer {
     }
 
     private final ConcurrentMap<Long, List<Spending>> campaignSpendingMap = new ConcurrentHashMap<>();
-    private final ConcurrentMap<Long, Semaphore> campaignLockMap = new ConcurrentHashMap<>();
+    private final ConcurrentMap<Long, ReentrantLock> campaignLockMap = new ConcurrentHashMap<>();
 
     public void lockCampaign(long id) throws InterruptedException{
         campaignSpendingMap.putIfAbsent(id, new ArrayList<>());
-        campaignLockMap.putIfAbsent(id, new Semaphore(1));
-        campaignLockMap.get(id).acquire();
+        campaignLockMap.putIfAbsent(id, new ReentrantLock());
+        campaignLockMap.get(id).lockInterruptibly();
     }
 
     public void unlockCampaign(long id) {
-        campaignLockMap.get(id).release();
+        campaignLockMap.get(id).unlock();
     }
 
     /**
@@ -59,13 +59,17 @@ public class BidSynchronizer {
      * does not exceed 10 NOK.
      *
      * The referenced campaign MUST be locked by {@code lockCampaign} before calling this method.
+     * If this condition is not met, an {@code IllegalThreadStateException} is thrown.
      * This will ensure that the bidding operations are serializable.
      *
      * @param id The ID of the campaign.
      * @param amount The amount of spending.
      * @return whether the campaign is available for spending or not.
      */
-    public boolean isCampaignAvailableForSpending(long id, double amount){
+    public boolean isCampaignAvailableForSpending(long id, double amount) {
+        if (!campaignLockMap.get(id).isHeldByCurrentThread()) {
+            throw new IllegalThreadStateException();
+        }
         double totalSpendingInPast10Sec = 0;
         List<Spending> spendings = campaignSpendingMap.get(id);
         spendings.removeIf(Spending::isOlderThan10Sec);
@@ -79,12 +83,16 @@ public class BidSynchronizer {
      * Registers a spending on a campaign specified by its ID.
      *
      * The referenced campaign MUST be locked by {@code lockCampaign} before calling this method.
+     * If this condition is not met, an {@code IllegalThreadStateException} is thrown.
      * This will ensure that the bidding operations are serializable.
      *
      * @param id The ID of the campaign.
      * @param amount The amount of spending.
      */
-    public void spendOnCampaign(long id, double amount){
+    public void spendOnCampaign(long id, double amount) {
+        if (!campaignLockMap.get(id).isHeldByCurrentThread()) {
+            throw new IllegalThreadStateException();
+        }
         List<Spending> spendings = campaignSpendingMap.get(id);
         spendings.add(new Spending(Instant.now(), amount));
     }
