@@ -112,6 +112,10 @@ class IntegrationTest {
         assertThat(response.getStatusInfo()).isEqualTo(Response.Status.NO_CONTENT);
     }
 
+    /**
+     * Tests if the application will accept a bid that should not succeed, because the specified keywords are
+     * only associated with campaigns without enough balance.
+     */
     @Test
     void testCampaignBalance(){
         CampaignParam campaignParam = new CampaignParam("Campaign Balance", new String[]{"Campaign Balance Keyword"}, 1.0);
@@ -126,6 +130,9 @@ class IntegrationTest {
         assertThat(response.getStatusInfo()).isEqualTo(Response.Status.NO_CONTENT);
     }
 
+    /**
+     * Tests that immediately after spending 10 NOK on a campaign, the application will not allow spending more.
+     */
     @Test
     void testMaximumSpendingPer10Sec(){
         CampaignParam campaignParam = new CampaignParam("Maximum Spending", new String[]{"Maximum Spending Keyword"}, 400.0);

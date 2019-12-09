@@ -39,7 +39,7 @@ public class BidsResource {
      * without having to worry about session management.
      * <p>
      * Also, a static class is needed because its instantiation happens outside of BidsResource
-     * (in the {@code UnitOfWorkAwareProxyFactory.created} method).
+     * (in the {@code UnitOfWorkAwareProxyFactory.create} method).
      */
     private static class TryToBidCallable implements Callable<Boolean> {
         private final Random random = new Random();
@@ -53,6 +53,14 @@ public class BidsResource {
             this.bidSynchronizer = bidSynchronizer;
         }
 
+        /**
+         * Tries to bid on the specified campaign. Locks it, then proceeds only if it is available for spending.
+         * If an exception is thrown the bid can be considered unsuccessful.
+         *
+         * @param campaign The campaign to bid on.
+         * @return a success flag, {@code true} if the bid is successful, {@code false} otherwise.
+         * @throws InterruptedException if the thread gets interrupted.
+         */
         private boolean tryToBidOnCampaign(Campaign campaign) throws InterruptedException {
             try {
                 bidSynchronizer.lockCampaign(campaign.getId());

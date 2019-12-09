@@ -34,7 +34,7 @@ class BidsResourceTest {
     /**
      * This class is used to make {@link HibernateBundle}'s {@code name()} method public.
      * Otherwise, we cannot mock the {@code name()} method and the tests will fail with a {@code NullPointerException}.
-     * Inspiration: https://stackoverflow.com/a/46203712/3738870.
+     * @see <a href="https://stackoverflow.com/a/46203712/3738870">https://stackoverflow.com/a/46203712/3738870</a>
      */
     static abstract class HibernateBundleMock extends HibernateBundle{
         protected HibernateBundleMock(Class entity, Class[] entities) {
@@ -67,6 +67,11 @@ class BidsResourceTest {
         campaign.setName("Test Campaign");
         campaign.setKeywords(new HashSet<>(Collections.singletonList("Keyword 1")));
         campaign.setBudget(100);
+        // The following mocks needs to be set up so we will not get any NullPointerExceptions when various methods of
+        // HIBERNATE_BUNDLE are called. This is needed for all tests in this class.
+        when(HIBERNATE_BUNDLE.getSessionFactory()).thenReturn(SESSION_FACTORY);
+        when(HIBERNATE_BUNDLE.name()).thenReturn("test");
+        when(SESSION_FACTORY.openSession()).thenReturn(SESSION);
     }
 
     @AfterEach
@@ -80,11 +85,6 @@ class BidsResourceTest {
                 new ArrayList<>(Collections.singletonList(campaign))
         );
         when(CAMPAIGN_DAO.tryToIncreaseSpending(any(Campaign.class), any(Double.class))).thenReturn(true);
-        // The following mocks needs to be set up so we will not run into NullPointerException when various methods of
-        // HIBERNATE_BUNDLE are called.
-        when(HIBERNATE_BUNDLE.getSessionFactory()).thenReturn(SESSION_FACTORY);
-        when(HIBERNATE_BUNDLE.name()).thenReturn("test");
-        when(SESSION_FACTORY.openSession()).thenReturn(SESSION);
 
         BidParam bidParam = new BidParam(1, new String[]{"Keyword 1"});
         final Response response = RESOURCES.target("/bids")
@@ -107,11 +107,6 @@ class BidsResourceTest {
                 new ArrayList<>(Collections.singletonList(campaign))
         );
         when(CAMPAIGN_DAO.tryToIncreaseSpending(any(Campaign.class), any(Double.class))).thenReturn(false);
-        // The following mocks needs to be set up so we will not run into NullPointerException when various methods of
-        // HIBERNATE_BUNDLE are called.
-        when(HIBERNATE_BUNDLE.getSessionFactory()).thenReturn(SESSION_FACTORY);
-        when(HIBERNATE_BUNDLE.name()).thenReturn("test");
-        when(SESSION_FACTORY.openSession()).thenReturn(SESSION);
 
         BidParam bidParam = new BidParam(1, new String[]{"Keyword 1"});
         final Response response = RESOURCES.target("/bids")
@@ -128,11 +123,6 @@ class BidsResourceTest {
     @Test
     void createBidUnsuccessfulNoMatchingKeywords(){
         when(CAMPAIGN_DAO.findCampaignsWithPositiveBalanceByKeywords(any(String[].class))).thenReturn(new ArrayList<>());
-        // The following mocks needs to be set up so we will not run into NullPointerException when various methods of
-        // HIBERNATE_BUNDLE are called.
-        when(HIBERNATE_BUNDLE.getSessionFactory()).thenReturn(SESSION_FACTORY);
-        when(HIBERNATE_BUNDLE.name()).thenReturn("test");
-        when(SESSION_FACTORY.openSession()).thenReturn(SESSION);
 
         BidParam bidParam = new BidParam(1, new String[]{"Keyword 2"});
         final Response response = RESOURCES.target("/bids")

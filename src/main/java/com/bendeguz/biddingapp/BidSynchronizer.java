@@ -57,42 +57,50 @@ public class BidSynchronizer {
      * Checks whether a campaign specified by its ID is available for bidding with the specified amount.
      * It is available only if sum of the spending on the campaign in the past 10 seconds and the specified amount
      * does not exceed 10 NOK.
-     *
+     * <p>
      * The referenced campaign MUST be locked by {@code lockCampaign} before calling this method.
      * If this condition is not met, an {@code IllegalThreadStateException} is thrown.
      * This will ensure that the bidding operations are serializable.
      *
-     * @param id The ID of the campaign.
+     * @param id     The ID of the campaign.
      * @param amount The amount of spending.
      * @return whether the campaign is available for spending or not.
      */
     public boolean isCampaignAvailableForSpending(long id, double amount) {
-        if (!campaignLockMap.containsKey(id) || !campaignLockMap.get(id).isHeldByCurrentThread()) {
-            throw new IllegalThreadStateException();
-        }
+        verifyCampaignLockedByThread(id);
         double totalSpendingInPast10Sec = 0;
         List<Spending> spendings = campaignSpendingMap.get(id);
         spendings.removeIf(Spending::isOlderThan10Sec);
-        for(Spending spending : spendings){
+        for (Spending spending : spendings) {
             totalSpendingInPast10Sec += spending.getAmount();
         }
         return totalSpendingInPast10Sec + amount <= MAXIMUM_SPENDING_PER_CAMPAIGN_PER_10_SEC;
     }
 
     /**
-     * Registers a spending on a campaign specified by its ID.
+     * Verifies that the campaign specified by its ID is locked by the current thread.
+     * Throws {@code IllegalThreadStateException} if it's not.
      *
+     * @param id The ID of the campaign.
+     */
+    private void verifyCampaignLockedByThread(long id) {
+        if (!campaignLockMap.containsKey(id) || !campaignLockMap.get(id).isHeldByCurrentThread()) {
+            throw new IllegalThreadStateException();
+        }
+    }
+
+    /**
+     * Registers a spending on a campaign specified by its ID.
+     * <p>
      * The referenced campaign MUST be locked by {@code lockCampaign} before calling this method.
      * If this condition is not met, an {@code IllegalThreadStateException} is thrown.
      * This will ensure that the bidding operations are serializable.
      *
-     * @param id The ID of the campaign.
+     * @param id     The ID of the campaign.
      * @param amount The amount of spending.
      */
     public void spendOnCampaign(long id, double amount) {
-        if (!campaignLockMap.containsKey(id) || !campaignLockMap.get(id).isHeldByCurrentThread()) {
-            throw new IllegalThreadStateException();
-        }
+        verifyCampaignLockedByThread(id);
         List<Spending> spendings = campaignSpendingMap.get(id);
         spendings.add(new Spending(Instant.now(), amount));
     }

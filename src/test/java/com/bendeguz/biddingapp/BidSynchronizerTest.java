@@ -22,6 +22,10 @@ class BidSynchronizerTest {
         bidSynchronizer = new BidSynchronizer();
     }
 
+    /**
+     * Checks whether a new thread can lock a campaign only after a different thread that has previously
+     * locked it releases it.
+     */
     @Test
     void lock(){
         long campaignId = 1;
@@ -89,6 +93,11 @@ class BidSynchronizerTest {
         }).doesNotThrowAnyException();
     }
 
+    /**
+     * This test is to ensure that trying to access a {@link BidSynchronizer} object's main methods
+     * ({@code isCampaignAvailableForSpending} or {@code spendOnCampaign} without acquiring a lock first
+     * will throw an exception.
+     */
     @Test
     void accessWithoutLockException(){
         long campaignId = 1;
